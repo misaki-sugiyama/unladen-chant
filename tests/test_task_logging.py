@@ -21,6 +21,17 @@ def fixLogger(fs, request):
             self.logger.debug('maindebug.{:d}'.format(ns.num))
     return SNS(fs=fs, ClassLog=ClassLog, fname=request.param)
 
+def test_write_log_fixed(fixLogger):
+    ns = fixLogger
+    ns.ClassLog().runcmd(('--logfile={}'.format(ns.fname),))
+    with open(ns.fname) as fp:
+        strLog = fp.read()
+        assert re.search(r'\[D\] [^ ]+ Invoked with parameters', strLog)
+        assert re.search(r'.num.: 0', strLog)
+        assert re.search(r'\[D\] [^ ]+ Running Pre Hook', strLog)
+        assert re.search(r'Main Script ======', strLog)
+        assert re.search(r'\[D\] [^ ]+ Running Post Hook', strLog)
+
 def test_write_log(fixLogger):
     ns = fixLogger
     ns.ClassLog().runcmd(('--logfile={}'.format(ns.fname),))
@@ -28,6 +39,22 @@ def test_write_log(fixLogger):
         strLog = fp.read()
         assert re.search(r'\[D\] [^ ]+ maindebug.0', strLog)
         assert re.search(r'\[D\] [^ ]+ Logfile={}'.format(ns.fname), strLog)
+
+def test_log_invoke_subtask(fs):
+    class ClassLogging(UnladenWithLogging):
+        def args(cls, parser):
+            parser.add_argument('--num', type=int, default=0)
+        def main(self, ns):
+            return True
+    class ClassLogging2(UnladenWithLogging):
+        def main(self, ns):
+            return self.invokeSubTask(ClassLogging(), num=23)
+    ClassLogging2().runcmd(('--logfile=/a.log',))
+    with open('/a.log') as fp:
+        strLog = fp.read()
+        assert re.search('.num.: 23', strLog)
+        assert re.search(r'\[D\] [^ ]+ .*subtask .*ClassLogging.* with', strLog)
+        assert re.search(r'\[D\] [^ ]+ Subtask .*ClassLogging.* returned True', strLog)
 
 def test_write_log_stream(fs):
     class ClassLogStream(UnladenWithLogging):

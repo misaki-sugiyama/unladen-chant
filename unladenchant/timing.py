@@ -35,8 +35,7 @@ class MixinTiming(metaclass=MetaClassUnladenTask):
 
     def logTaskBegin(self, ns):
         global levelNestedHeader
-        # TODO: customizabele task title?
-        titleTask = self.__class__.__name__
+        titleTask = self.getName(ns)
         self.timeBegin = datetime.now()
         self.logger.debug('({:d}) Begin {}'.format(levelNestedHeader, titleTask))
         if ns.colorful_header:
@@ -57,7 +56,7 @@ class MixinTiming(metaclass=MetaClassUnladenTask):
     def logTaskEnd(self, ns):
         global levelNestedHeader
         levelNestedHeader -= 1
-        titleTask = self.__class__.__name__
+        titleTask = self.getName(ns)
         strElapsed = getTimeString(self.getElapsedTimeDelta())
         self.logger.debug('({:d}) End {} Elapsed {}'.format(levelNestedHeader, titleTask, strElapsed))
         if ns.colorful_header:
