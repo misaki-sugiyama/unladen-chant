@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+
+if [ "${VIRTUAL_ENV-}" != "" ]; then
+  if command -v pip >/dev/null; then
+    git describe --tags --match '[0-9]*' --dirty
+    rm -rf __pycache__
+    pip install -e .
+  fi
+fi
