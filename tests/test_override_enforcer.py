@@ -4,6 +4,8 @@ from unladenchant.overrideenforcer import MetaMixinOverrideEnforcer
 class MetaClassTest(MetaMixinOverrideEnforcer, type):
     pass
 
+## Basic functionality test
+
 class BaseClass(metaclass=MetaClassTest):
     ISABSTRACTCLASS = True
     @mustBeOverriden
@@ -24,6 +26,7 @@ def test_cannot_instantiate_abstract_class():
     with pytest.raises(TypeError):
         obj = BaseClass()
 
+# This is because some bug causing init parameters to crash the program
 def test_can_accept_init_args():
     class NewClass(BaseClass):
         def main(self):

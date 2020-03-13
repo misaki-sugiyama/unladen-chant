@@ -9,6 +9,76 @@ class MetaClassTest(MetaMixinEnableHooks, type):
 class BaseClass(metaclass=MetaClassTest):
     pass
 
+## invokeHook
+
+@pytest.fixture
+def fixSimpleHook():
+    aRecord = []
+    class C(BaseClass):
+        @hook('hook1')
+        def f(self):
+            aRecord.append(self)
+    def f0(self, a=0):
+        aRecord.append(0)
+    return SNS(aRecord=aRecord, C=C, o=C(), f0=f0)
+
+def test_invoke_empty():
+    obj = BaseClass()
+    assert obj.invokeHook('nonexistent') == {}
+
+def test_invoke_instance(fixSimpleHook):
+    ns = fixSimpleHook
+    ns.o.invokeHook('hook1')
+    assert ns.aRecord == [ns.o]
+
+def test_invoke_classmethod(fixSimpleHook):
+    ns = fixSimpleHook
+    ns.C.invokeHook('hook1')
+    assert ns.aRecord == [ns.C]
+
+## getHook
+
+def test_getHook_instance_immutable(fixSimpleHook):
+    ns = fixSimpleHook
+    objHook = ns.o.getHook('hook1')
+    objHook.register(ns.f0)
+    ns.o.invokeHook('hook1')
+    assert ns.aRecord == [ns.o]
+
+def test_getHook_classmethod_immutable(fixSimpleHook):
+    ns = fixSimpleHook
+    objHook = ns.C.getHook('hook1')
+    objHook.register(ns.f0)
+    ns.C.invokeHook('hook1')
+    assert ns.aRecord == [ns.C]
+
+## Return value
+
+@pytest.fixture
+def fixReturnHook():
+    class C(BaseClass):
+        @hook('hook1')
+        def f(self):
+            return self
+        @hook('hook1')
+        def f2(self):
+            return "f2"
+    return SNS(C=C, o=C())
+
+def test_invoke_return_instance(fixReturnHook):
+    ns = fixReturnHook
+    rslt = ns.o.invokeHook('hook1')
+    assert rslt[ns.C.f] == ns.o
+    assert rslt[ns.C.f2] == "f2"
+
+def test_invoke_return_classmethod(fixReturnHook):
+    ns = fixReturnHook
+    rslt = ns.C.invokeHook('hook1')
+    assert rslt[ns.C.f] == ns.C
+    assert rslt[ns.C.f2] == "f2"
+
+## invokeHook - multiclass
+
 @pytest.fixture
 def fixClassHook():
     aRecord = []
@@ -17,28 +87,22 @@ def fixClassHook():
         def f2(self, a=0):
             aRecord.append(self)
             aRecord.append(a+2)
-            return a+2
     class C2(BaseClass):
         @hook('hook1')
         def f3(self, a=0):
             aRecord.append(self)
             aRecord.append(a+3)
-            return a+3
     class C1a(C2, C1):
         @hook('hook1')
         def f1(self, a=0):
             aRecord.append(self)
             aRecord.append(a+1)
-            return a+1
     class C1b(C1a):
         @hook('hook1', atTop=True)
         def f6(self, a=0):
             aRecord.append(self)
             aRecord.append(a+6)
-            return a+6
-    def f0(self, a=0):
-        aRecord.append(aRecord+0)
-    return SNS(aRecord=aRecord, C1=C1, C2=C2, C1a=C1a, C1b=C1b, f0=f0)
+    return SNS(aRecord=aRecord, C1=C1, C2=C2, C1a=C1a, C1b=C1b)
 
 @pytest.fixture
 def fixInstHook(fixClassHook):
@@ -48,40 +112,6 @@ def fixInstHook(fixClassHook):
     ns.o1a = ns.C1a()
     ns.o1b = ns.C1b()
     return ns
-
-## invokeHook
-
-def test_invoke_empty():
-    obj = BaseClass()
-    assert obj.invokeHook('nonexistent') == {}
-
-def test_invoke_instance(fixInstHook):
-    ns = fixInstHook
-    ns.o1.invokeHook('hook1')
-    assert ns.aRecord == [ns.o1, 2]
-
-def test_invoke_classmethod(fixClassHook):
-    ns = fixClassHook
-    ns.C1.invokeHook('hook1')
-    assert ns.aRecord == [ns.C1, 2]
-
-## getHook
-
-def test_getHook_instance_immutable(fixInstHook):
-    ns = fixInstHook
-    objHook = ns.o1.getHook('hook1')
-    objHook.register(ns.f0)
-    ns.o1.invokeHook('hook1')
-    assert ns.aRecord == [ns.o1, 2]
-
-def test_getHook_classmethod_immutable(fixClassHook):
-    ns = fixClassHook
-    objHook = ns.C1.getHook('hook1')
-    objHook.register(ns.f0)
-    ns.C1.invokeHook('hook1')
-    assert ns.aRecord == [ns.C1, 2]
-
-## invokeHook - multiclass
 
 def test_invoke_subclass_instance(fixInstHook):
     ns = fixInstHook
@@ -97,22 +127,6 @@ def test_invoke_subclass_atTop(fixInstHook):
     ns = fixInstHook
     ns.o1b.invokeHook('hook1')
     assert ns.aRecord == [ns.o1b, 6, ns.o1b, 3, ns.o1b, 2, ns.o1b, 1]
-
-## Return Value
-
-def test_invoke_return_instance(fixInstHook):
-    ns = fixInstHook
-    rslt = ns.o1a.invokeHook('hook1')
-    assert rslt[ns.C2.f3] == 3
-    assert rslt[ns.C1.f2] == 2
-    assert rslt[ns.C1a.f1] == 1
-
-def test_invoke_return_classmethod(fixClassHook):
-    ns = fixClassHook
-    rslt = ns.C1a.invokeHook('hook1')
-    assert rslt[ns.C2.f3] == 3
-    assert rslt[ns.C1.f2] == 2
-    assert rslt[ns.C1a.f1] == 1
 
 ## Special Hook: onClassCreation
 

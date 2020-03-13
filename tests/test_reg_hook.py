@@ -84,8 +84,8 @@ def test_is_registered(fixtureSimpleHook):
 def test_can_get_functions(fixtureSimpleHook):
     objRH, listRecord, f1, f2, f3 = fixtureSimpleHook
     rslt = objRH.getFunctions()
-    assert rslt[0] == f1
-    assert rslt[1] == f2
+    assert f1 in rslt
+    assert f2 in rslt
     assert len(rslt) == 2
 
 def test_cant_modify_function_list(fixtureSimpleHook):
@@ -116,6 +116,7 @@ def test_cant_modify_registrants(fixtureSimpleHook):
         rslt.add(100)
 
 ## Regarding making a copy of registry hook object
+
 @pytest.fixture
 def fixtureCopyHook():
     def func1():

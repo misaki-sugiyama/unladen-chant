@@ -8,6 +8,8 @@ class MetaClassTest(MetaMixinResourceChecker, type):
 class BaseClass(metaclass=MetaClassTest):
     pass
 
+## Testing pass and failure
+
 def rescheckPassed():
     return True
 def rescheckFailed():
@@ -27,6 +29,7 @@ def test_will_fail_if_res_not_okay_partially():
         class NewClass(BaseClass):
             RESCHECK = (rescheckFailed, rescheckPassed)
 
+## Testing multiple checks
 
 @pytest.fixture
 def fixtureCheckCount():

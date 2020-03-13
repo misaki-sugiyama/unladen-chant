@@ -33,25 +33,25 @@ def test_timing_header(fixTimer, capsys):
     ns = fixTimer
     ns.ClassTimer().runcmd(('--colorful-header',))
     strStderr = capsys.readouterr().err
-    assert re.search(r'======.* \(1\).* Begin ClassTimer .*======', strStderr)
-    assert re.search(r'======.* \(1\).* End ClassTimer .*\[[0-9mh]+s\] .*======', strStderr)
+    assert re.search(r'\(1\).* Begin ClassTimer', strStderr)
+    assert re.search(r'\(1\).* End ClassTimer .*\[[0-9mh]+s\]', strStderr)
 
 def test_timing_custom_name(fixTimer, capsys):
     ns = fixTimer
     ns.ClassTimer.getName = lambda self, ns: "NewName"
     ns.ClassTimer().runcmd(('--colorful-header',))
     strStderr = capsys.readouterr().err
-    assert re.search(r'======.* \(1\).* Begin NewName ', strStderr)
-    assert re.search(r'======.* \(1\).* End NewName ', strStderr)
+    assert re.search(r'\(1\).* Begin NewName', strStderr)
+    assert re.search(r'\(1\).* End NewName', strStderr)
 
 def test_timing_header_nested(fixTimer, capsys):
     ns = fixTimer
     ns.ClassTimer2().runcmd(('--colorful-header',))
     strStderr = capsys.readouterr().err
-    assert re.search(r'======.* \(1\).* Begin ClassTimer2 .*======', strStderr)
-    assert re.search(r'======.* \(1\).* End ClassTimer2 .*\[[0-9mh]+s\] .*======', strStderr)
-    assert re.search(r'======.* \(2\).* Begin ClassTimer .*======', strStderr)
-    assert re.search(r'======.* \(2\).* End ClassTimer .*\[[0-9mh]+s\] .*======', strStderr)
+    assert re.search(r'\(1\).* Begin ClassTimer2', strStderr)
+    assert re.search(r'\(1\).* End ClassTimer2 .*\[[0-9mh]+s\]', strStderr)
+    assert re.search(r'\(2\).* Begin ClassTimer', strStderr)
+    assert re.search(r'\(2\).* End ClassTimer .*\[[0-9mh]+s\]', strStderr)
 
 ## Regarding getTimeString
 
